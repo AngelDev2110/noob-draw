@@ -1,12 +1,10 @@
 import { supabase } from "@/utils/supabase";
-import type { RoomInsert } from "@/types/rooms";
+import { getSession } from "./auth";
 
-export async function createRoom(payload: RoomInsert) {
-  const { data, error } = await supabase
-    .from("rooms")
-    .insert(payload)
-    .select()
-    .single();
+export async function createRoomWithHost(slug: string) {
+  const { data, error } = await supabase.rpc("create_room_with_host", {
+    room_slug: slug,
+  });
 
   if (error) throw new Error(error.message);
 
@@ -24,3 +22,29 @@ export async function getRoomBySlug(slug: string) {
 
   return data;
 }
+
+export const getMyMembership = async (roomId: string) => {
+  const {
+    data: { session },
+    error: userError,
+  } = await getSession();
+
+  if (userError) throw new Error(userError.message);
+
+  const userId = session?.user.id;
+
+  if (!userId) {
+    throw new Error("User is not authenticated");
+  }
+
+  const { data, error } = await supabase
+    .from("room_members")
+    .select("room_id, user_id, approved")
+    .eq("room_id", roomId)
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (error) throw new Error(error.message);
+
+  return data;
+};

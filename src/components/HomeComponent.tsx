@@ -2,7 +2,7 @@
 import { createRoomSlug } from "@/utils/rooms";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "@tanstack/react-router";
-import { createRoom } from "@/services/rooms";
+import { createRoomWithHost } from "@/services/rooms";
 
 export function HomeComponent() {
   const { user, loading } = useAuth() || {};
@@ -16,7 +16,7 @@ export function HomeComponent() {
       }
       const slug = createRoomSlug();
 
-      await createRoom({ slug });
+      await createRoomWithHost(slug);
 
       navigate({ to: "/rooms/$slug", params: { slug } });
     } catch (_) {
