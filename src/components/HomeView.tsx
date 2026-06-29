@@ -8,7 +8,7 @@ export function HomeView() {
   const { user, loading } = useAuth() || {};
 
   return (
-    <main className="flex flex-col items-center justify-center min-h-screen bg-radial from-background to-primary/30 p-4">
+    <section className="flex flex-col items-center justify-center w-full gap-2">
       <header className="flex flex-col items-center gap-2 mb-8">
         <h1 className="text-5xl font-extrabold tracking-tight">Noob Draw ✏️</h1>
         <p className="text-muted-foreground text-center text-base">
@@ -25,6 +25,6 @@ export function HomeView() {
           <HomeErrorContent />
         )}
       </Card>
-    </main>
+    </section>
   );
 }

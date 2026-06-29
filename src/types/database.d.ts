@@ -84,6 +84,23 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      get_approved_members: {
+        Args: { p_room_id: string }
+        Returns: {
+          display_name: string
+          joined_at: string
+          user_id: string
+        }[]
+      }
+      get_pending_members: {
+        Args: { p_room_id: string }
+        Returns: {
+          display_name: string
+          joined_at: string
+          user_id: string
+        }[]
+      }
+      is_approved_member: { Args: { check_room_id: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never

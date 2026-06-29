@@ -76,11 +76,18 @@ export const approveMember = async (roomId: string, userId: string) => {
 };
 
 export const getPendingMembers = async (roomId: string) => {
-  const { data, error } = await supabase
-    .from("room_members")
-    .select("*")
-    .eq("room_id", roomId)
-    .eq("approved", false);
+  const { data, error } = await supabase.rpc("get_pending_members", {
+    p_room_id: roomId,
+  });
+
+  if (error) throw new Error(error.message);
+  return data;
+};
+
+export const getApprovedMembers = async (roomId: string) => {
+  const { data, error } = await supabase.rpc("get_approved_members", {
+    p_room_id: roomId,
+  });
   if (error) throw new Error(error.message);
   return data;
 };

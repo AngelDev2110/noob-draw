@@ -12,7 +12,9 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <Outlet />
+        <main className="flex items-center justify-center min-h-screen bg-radial from-background to-primary/30 p-4">
+          <Outlet />
+        </main>
       </AuthProvider>
     </QueryClientProvider>
   );
