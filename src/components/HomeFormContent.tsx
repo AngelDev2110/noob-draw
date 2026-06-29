@@ -1,27 +1,24 @@
 import type { User } from "@supabase/supabase-js";
 import { CardHeader, CardTitle, CardDescription, CardContent } from "./ui/card";
-import { Field, FieldLabel, FieldDescription } from "./ui/field";
+import { Field, FieldLabel } from "./ui/field";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { Separator } from "./ui/separator";
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { changeDisplayName } from "@/services/auth";
 import { createRoomSlug } from "@/utils/rooms";
 import { createRoomWithHost } from "@/services/rooms";
 import { useNavigate } from "@tanstack/react-router";
+import { UsernameField } from "./UsernameField";
+import { ArrowBigRight } from "lucide-react";
+import { LoaderCircle, Plus } from "lucide-react";
 
 export function HomeFormContent(props: { user: User | null }) {
   const { user } = props;
 
   const navigate = useNavigate();
 
-  const [name, setName] = useState("");
   const [joinSlug, setJoinSlug] = useState("");
-
-  const nameMutation = useMutation({
-    mutationFn: (displayName: string) => changeDisplayName(displayName),
-  });
 
   const createRoomMutation = useMutation({
     mutationFn: async () => {
@@ -72,31 +69,7 @@ export function HomeFormContent(props: { user: User | null }) {
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-5">
-        <Field>
-          <FieldLabel htmlFor="name">Display Name</FieldLabel>
-          <div className="flex gap-2">
-            <div className="flex flex-col gap-1 flex-1">
-              <Input
-                id="name"
-                placeholder="Top 1° Noobie"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
-              <FieldDescription className="text-xs text-muted-foreground">
-                {name.trim().length < 3
-                  ? "Name must be at least 3 characters"
-                  : "Looks good!"}
-              </FieldDescription>
-            </div>
-            <Button
-              variant="secondary"
-              onClick={() => nameMutation.mutate(name.trim())}
-              disabled={name.trim().length < 3 || nameMutation.isPending}
-            >
-              {nameMutation.isPending ? "Saving..." : "Update"}
-            </Button>
-          </div>
-        </Field>
+        <UsernameField />
 
         <Button
           onClick={() => createRoomMutation.mutate()}
@@ -105,7 +78,17 @@ export function HomeFormContent(props: { user: User | null }) {
           }
           className="w-full"
         >
-          {createRoomMutation.isPending ? "Creating room..." : "Create room"}
+          {createRoomMutation.isPending ? (
+            <>
+              Creating Room
+              <LoaderCircle className="animate-spin" />
+            </>
+          ) : (
+            <>
+              Create Room
+              <Plus />
+            </>
+          )}
         </Button>
 
         <div className="flex items-center gap-3">
@@ -134,7 +117,7 @@ export function HomeFormContent(props: { user: User | null }) {
                   !user?.user_metadata?.display_name
                 }
               >
-                Join
+                <ArrowBigRight />
               </Button>
             </div>
           </Field>

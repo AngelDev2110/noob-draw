@@ -193,3 +193,16 @@
     @apply bg-background text-foreground;
   }
 }
+
+@keyframes loading {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(350%);
+  }
+}
+
+@theme {
+  --animate-loading: loading 1.5s ease-in-out infinite;
+}

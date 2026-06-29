@@ -3,13 +3,25 @@ import {
   getRoomBySlug,
   getMyMembership,
   requestToJoin,
-  getPendingMembers,
-  approveMember,
 } from "@/services/rooms";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/context/AuthContext";
 import { useEffect } from "react";
 import { supabase } from "@/utils/supabase";
+import { UsernameField } from "@/components/UsernameField";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { LobbySkeleton } from "@/components/LobbySkeleton";
+import { RoomSlug } from "@/components/RoomSlug";
+import { PendingMembers } from "@/components/PendingMembers";
+import { ApprovedMembers } from "@/components/ApprovedMembers";
+import { GamepadDirectional } from "lucide-react";
+import { SendHorizonal, LoaderCircle, Timer } from "lucide-react";
 
 export const Route = createFileRoute("/rooms/$slug")({
   component: RouteComponent,
@@ -38,23 +50,10 @@ function RouteComponent() {
 
   const isHost = user?.id === room?.created_by;
 
-  const { data: pending } = useQuery({
-    queryKey: ["pending", room?.id],
-    queryFn: () => getPendingMembers(room!.id),
-    enabled: !!room && isHost,
-  });
-
   const joinMutation = useMutation({
     mutationFn: () => requestToJoin(room!.id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["membership", room?.id] });
-    },
-  });
-
-  const approveMutation = useMutation({
-    mutationFn: (userId: string) => approveMember(room!.id, userId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["pending", room?.id] });
     },
   });
 
@@ -104,43 +103,125 @@ function RouteComponent() {
     };
   }, [room, user, isHost, queryClient]);
 
-  if (isRoomLoading) return <div>Fetching room...</div>;
-  if (isRoomError) return <div>Error fetching room</div>;
+  if (isRoomError)
+    return (
+      <Card className="w-full max-w-sm">
+        <CardContent>
+          <p>
+            We couldn't fetch the room data 😢, maybe{" "}
+            <span className="font-bold">reloading the page</span> will solve our
+            problems!!{" "}
+            <span className="text-xs text-muted-foreground">(We hope so)</span>
+          </p>
+
+          <Button
+            className="mt-3 w-full"
+            onClick={() => window.location.reload()}
+          >
+            Reload
+          </Button>
+        </CardContent>
+      </Card>
+    );
+
+  if (isRoomLoading || isMembershipLoading)
+    return (
+      <Card className="w-full max-w-sm">
+        <LobbySkeleton />
+      </Card>
+    );
   if (!room) return <div>Room not found</div>;
 
-  if (isHost) {
+  if (membership?.approved) {
     return (
-      <div>
-        <h1>Host view: {room.slug}</h1>
-        <h2>Pending requests</h2>
-        {pending?.length === 0 && <div>No pending requests</div>}
-        {pending?.map((p) => (
-          <div key={p.user_id}>
-            <span>{p.user_id}</span>
-            <button
-              onClick={() => approveMutation.mutate(p.user_id)}
-              disabled={approveMutation.isPending}
-            >
-              Approve
-            </button>
-          </div>
-        ))}
-      </div>
+      <Card className="w-full max-w-sm">
+        <CardContent>
+          <CardTitle className="text-base mb-4">
+            Hey,{" "}
+            <span className="font-bold text-primary">
+              {user?.user_metadata.display_name}
+            </span>
+            !
+          </CardTitle>
+
+          <RoomSlug slug={room.slug} />
+          <ApprovedMembers className="mt-4" room={room} />
+          {isHost && (
+            <div>
+              <PendingMembers className="mt-4" room={room} />
+              <Button size={"lg"} className="mt-4 w-full">
+                Start <GamepadDirectional />
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     );
   }
 
-  if (isMembershipLoading) return <div>Loading membership...</div>;
-  if (membership?.approved) return <div>Inside the room: {room.slug}</div>;
-  if (membership) return <div>Waiting for approval...</div>;
-
   return (
-    <div>
-      <button
-        onClick={() => joinMutation.mutate()}
-        disabled={joinMutation.isPending}
-      >
-        {joinMutation.isPending ? "Solicitando..." : "Solicitar unirse"}
-      </button>
-    </div>
+    <Card className="w-full max-w-sm">
+      <CardContent>
+        <CardTitle className="text-base">
+          {user?.user_metadata?.display_name ? (
+            <p>
+              Hey,{" "}
+              <span className="font-bold text-primary">
+                {user.user_metadata.display_name}
+              </span>
+              !
+            </p>
+          ) : (
+            "What should we call you?!"
+          )}
+        </CardTitle>
+        <CardDescription className="mb-4">
+          {user?.user_metadata?.display_name ? (
+            "You can change your nickname below."
+          ) : (
+            <p>
+              <span className="text-primary">Set your nickname</span> before
+              creating or joining a room. Your name will be visible to other
+              players
+            </p>
+          )}
+        </CardDescription>
+        <UsernameField />
+
+        <Button
+          className="mt-3 w-full"
+          onClick={() => joinMutation.mutate()}
+          disabled={
+            joinMutation.isPending ||
+            !user?.user_metadata?.display_name ||
+            !!membership
+          }
+        >
+          {joinMutation.isPending ? (
+            <>
+              <span> Sending</span>
+              <LoaderCircle className="animate-spin" />
+            </>
+          ) : membership ? (
+            <>
+              <span>Waiting for approval</span>
+              <Timer className="animate-pulse" />
+            </>
+          ) : (
+            <>
+              <span>Ask to join the room</span>
+              <SendHorizonal />
+            </>
+          )}
+        </Button>
+
+        {membership && !membership.approved && (
+          <p className="text-xs text-muted-foreground mt-1 text-center">
+            <span className="font-bold">Note:</span> Tell your friend to approve
+            your request!
+          </p>
+        )}
+      </CardContent>
+    </Card>
   );
 }
