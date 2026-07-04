@@ -13,6 +13,9 @@ import { LobbySkeleton } from "@/components/LobbySkeleton";
 import { RoomErrorContent } from "@/components/RoomErrorContent";
 import { RoomLobbyContent } from "@/components/RoomLobbyContent";
 import { RoomJoinContent } from "@/components/RoomJoinContent";
+import { useGameChannel } from "@/hooks/useGameChannel";
+import { getGameState, startGame } from "@/services/game";
+import { RoomGame } from "./RoomGame";
 
 export function RoomView() {
   const { slug } = useParams({ from: "/rooms/$slug" });
@@ -41,6 +44,21 @@ export function RoomView() {
     mutationFn: () => requestToJoin(room!.id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["membership", room?.id] });
+    },
+  });
+
+  const { broadcastGameStarted } = useGameChannel(room?.id);
+
+  const { data: gameState } = useQuery({
+    queryKey: ["gameState", room?.id],
+    queryFn: () => getGameState(room!.id),
+    enabled: !!room,
+  });
+
+  const startGameMutation = useMutation({
+    mutationFn: () => startGame(room!.id),
+    onSuccess: () => {
+      broadcastGameStarted();
     },
   });
 
@@ -105,10 +123,19 @@ export function RoomView() {
     );
   if (!room) return <div>Room not found</div>;
 
+  if (gameState?.status === "playing") {
+    return <RoomGame />;
+  }
+
   if (membership?.approved) {
     return (
       <Card className="w-full max-w-sm">
-        <RoomLobbyContent room={room} user={user} isHost={isHost} />
+        <RoomLobbyContent
+          room={room}
+          user={user}
+          isHost={isHost}
+          startGameMutation={startGameMutation}
+        />
       </Card>
     );
   }
