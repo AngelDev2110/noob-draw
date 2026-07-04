@@ -14,23 +14,61 @@ export type Database = {
   }
   public: {
     Tables: {
+      room_game_state: {
+        Row: {
+          current_drawer: string | null
+          current_word: string | null
+          room_id: string
+          round_number: number | null
+          status: string
+          turn_started_at: string | null
+        }
+        Insert: {
+          current_drawer?: string | null
+          current_word?: string | null
+          room_id: string
+          round_number?: number | null
+          status?: string
+          turn_started_at?: string | null
+        }
+        Update: {
+          current_drawer?: string | null
+          current_word?: string | null
+          room_id?: string
+          round_number?: number | null
+          status?: string
+          turn_started_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "room_game_state_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: true
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       room_members: {
         Row: {
           approved: boolean | null
           joined_at: string | null
           room_id: string
+          score: number
           user_id: string
         }
         Insert: {
           approved?: boolean | null
           joined_at?: string | null
           room_id: string
+          score?: number
           user_id: string
         }
         Update: {
           approved?: boolean | null
           joined_at?: string | null
           room_id?: string
+          score?: number
           user_id?: string
         }
         Relationships: [
@@ -48,19 +86,40 @@ export type Database = {
           created_at: string | null
           created_by: string | null
           id: string
+          language: string
           slug: string
         }
         Insert: {
           created_at?: string | null
           created_by?: string | null
           id?: string
+          language?: string
           slug: string
         }
         Update: {
           created_at?: string | null
           created_by?: string | null
           id?: string
+          language?: string
           slug?: string
+        }
+        Relationships: []
+      }
+      words: {
+        Row: {
+          id: string
+          language: string
+          text: string
+        }
+        Insert: {
+          id?: string
+          language?: string
+          text: string
+        }
+        Update: {
+          id?: string
+          language?: string
+          text?: string
         }
         Relationships: []
       }
@@ -75,6 +134,7 @@ export type Database = {
           created_at: string | null
           created_by: string | null
           id: string
+          language: string
           slug: string
         }
         SetofOptions: {
@@ -92,6 +152,16 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_game_state: {
+        Args: { p_room_id: string }
+        Returns: {
+          current_drawer: string
+          round_number: number
+          status: string
+          turn_started_at: string
+        }[]
+      }
+      get_my_word: { Args: { p_room_id: string }; Returns: string }
       get_pending_members: {
         Args: { p_room_id: string }
         Returns: {
@@ -101,6 +171,7 @@ export type Database = {
         }[]
       }
       is_approved_member: { Args: { check_room_id: string }; Returns: boolean }
+      start_game: { Args: { p_room_id: string }; Returns: undefined }
     }
     Enums: {
       [_ in never]: never
