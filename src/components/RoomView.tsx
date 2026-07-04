@@ -47,7 +47,7 @@ export function RoomView() {
     },
   });
 
-  const { broadcastGameStarted } = useGameChannel(room?.id);
+  const { broadcastGameStarted, onlineUserIds } = useGameChannel(room?.id);
 
   const { data: gameState } = useQuery({
     queryKey: ["gameState", room?.id],
@@ -131,6 +131,7 @@ export function RoomView() {
     return (
       <Card className="w-full max-w-sm">
         <RoomLobbyContent
+          onlineUserIds={onlineUserIds}
           room={room}
           user={user}
           isHost={isHost}

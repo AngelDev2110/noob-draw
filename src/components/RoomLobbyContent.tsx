@@ -15,6 +15,7 @@ export function RoomLobbyContent({
   user,
   isHost,
   startGameMutation,
+  onlineUserIds,
 }: {
   room: Awaited<ReturnType<typeof getRoomBySlug>>;
   user: User | null | undefined;
@@ -24,6 +25,7 @@ export function RoomLobbyContent({
     Error,
     void
   >;
+  onlineUserIds: Set<string>;
 }) {
   const { data: approvedMembers } = useQuery({
     queryKey: ["members", room?.id],
@@ -42,7 +44,11 @@ export function RoomLobbyContent({
       </CardTitle>
 
       <RoomSlug slug={room.slug} />
-      <ApprovedMembers className="mt-4" room={room} />
+      <ApprovedMembers
+        className="mt-4"
+        room={room}
+        onlineUserIds={onlineUserIds}
+      />
       {isHost && (
         <div>
           <PendingMembers className="mt-4" room={room} />
@@ -51,8 +57,7 @@ export function RoomLobbyContent({
             className="mt-4 w-full"
             onClick={() => startGameMutation.mutate()}
             disabled={
-              startGameMutation.isPending ||
-              (approvedMembers?.length ?? 0) < 2
+              startGameMutation.isPending || (approvedMembers?.length ?? 0) < 2
             }
           >
             {startGameMutation.isPending ? "Starting..." : "Start"}{" "}
