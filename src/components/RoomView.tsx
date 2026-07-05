@@ -15,7 +15,7 @@ import { RoomLobbyContent } from "@/components/RoomLobbyContent";
 import { RoomJoinContent } from "@/components/RoomJoinContent";
 import { useGameChannel } from "@/hooks/useGameChannel";
 import { getGameState, startGame } from "@/services/game";
-import { RoomGame } from "./RoomGame";
+import { DrawingCanvas } from "./DrawingCanvas";
 
 export function RoomView() {
   const { slug } = useParams({ from: "/rooms/$slug" });
@@ -47,7 +47,9 @@ export function RoomView() {
     },
   });
 
-  const { broadcastGameStarted, onlineUserIds } = useGameChannel(room?.id);
+  const { broadcastGameStarted, onlineUserIds, channel } = useGameChannel(
+    room?.id,
+  );
 
   const { data: gameState } = useQuery({
     queryKey: ["gameState", room?.id],
@@ -108,6 +110,8 @@ export function RoomView() {
     };
   }, [room, user, isHost, queryClient]);
 
+  const isDrawer = gameState?.current_drawer === user?.id;
+
   if (isRoomError)
     return (
       <Card className="w-full max-w-sm">
@@ -124,7 +128,13 @@ export function RoomView() {
   if (!room) return <div>Room not found</div>;
 
   if (gameState?.status === "playing") {
-    return <RoomGame />;
+    return (
+      <DrawingCanvas
+        isDrawer={isDrawer}
+        channel={channel}
+        gameState={gameState}
+      />
+    );
   }
 
   if (membership?.approved) {
