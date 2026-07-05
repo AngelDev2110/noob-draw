@@ -159,6 +159,7 @@ export type Database = {
           round_number: number
           status: string
           turn_started_at: string
+          word_length: number
         }[]
       }
       get_my_word: { Args: { p_room_id: string }; Returns: string }
