@@ -14,8 +14,9 @@ import { RoomErrorContent } from "@/components/RoomErrorContent";
 import { RoomLobbyContent } from "@/components/RoomLobbyContent";
 import { RoomJoinContent } from "@/components/RoomJoinContent";
 import { useGameChannel } from "@/hooks/useGameChannel";
-import { getGameState, startGame } from "@/services/game";
+import { getGameState, startGame, getMyWord } from "@/services/game";
 import { DrawingCanvas } from "./DrawingCanvas";
+import { WordDisplay } from "./DisplayWord";
 
 export function RoomView() {
   const { slug } = useParams({ from: "/rooms/$slug" });
@@ -112,6 +113,12 @@ export function RoomView() {
 
   const isDrawer = gameState?.current_drawer === user?.id;
 
+  const { data: myWord } = useQuery({
+    queryKey: ["myWord", room?.id, gameState?.current_drawer],
+    queryFn: () => getMyWord(room!.id),
+    enabled: !!room && isDrawer && gameState?.status === "playing",
+  });
+
   if (isRoomError)
     return (
       <Card className="w-full max-w-sm">
@@ -129,11 +136,18 @@ export function RoomView() {
 
   if (gameState?.status === "playing") {
     return (
-      <DrawingCanvas
-        isDrawer={isDrawer}
-        channel={channel}
-        gameState={gameState}
-      />
+      <div className="flex flex-col gap-3 w-full max-w-2xl mx-auto">
+        <WordDisplay
+          isDrawer={isDrawer}
+          word={myWord}
+          wordLength={gameState.word_length}
+        />
+        <DrawingCanvas
+          isDrawer={isDrawer}
+          channel={channel}
+          gameState={gameState}
+        />
+      </div>
     );
   }
 
