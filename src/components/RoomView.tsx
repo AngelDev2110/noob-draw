@@ -17,6 +17,7 @@ import { useGameChannel } from "@/hooks/useGameChannel";
 import { getGameState, startGame, getMyWord } from "@/services/game";
 import { DrawingCanvas } from "./DrawingCanvas";
 import { WordDisplay } from "./DisplayWord";
+import { useWordReveal } from "@/hooks/useWordReveal";
 
 export function RoomView() {
   const { slug } = useParams({ from: "/rooms/$slug" });
@@ -30,7 +31,7 @@ export function RoomView() {
   } = useQuery({
     queryKey: ["room", slug],
     queryFn: () => getRoomBySlug(slug),
-    staleTime: 1000 * 60 * 5,
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
   const { data: membership, isLoading: isMembershipLoading } = useQuery({
@@ -67,7 +68,8 @@ export function RoomView() {
 
   useEffect(() => {
     if (!room || !isHost) return;
-    const channel = supabase
+
+    const ch = supabase
       .channel(`room-members-${room.id}`)
       .on(
         "postgres_changes",
@@ -82,15 +84,15 @@ export function RoomView() {
         },
       )
       .subscribe();
-
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(ch);
     };
   }, [isHost, queryClient, room]);
 
   useEffect(() => {
     if (!room || !user || isHost) return;
-    const channel = supabase
+
+    const ch = supabase
       .channel(`my-membership-${room.id}-${user.id}`)
       .on(
         "postgres_changes",
@@ -105,9 +107,8 @@ export function RoomView() {
         },
       )
       .subscribe();
-
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(ch);
     };
   }, [room, user, isHost, queryClient]);
 
@@ -117,6 +118,14 @@ export function RoomView() {
     queryKey: ["myWord", room?.id, gameState?.current_drawer],
     queryFn: () => getMyWord(room!.id),
     enabled: !!room && isDrawer && gameState?.status === "playing",
+  });
+
+  const { revealedLetters } = useWordReveal(channel, {
+    isDrawer,
+    myWord,
+    turnStartedAt: gameState?.turn_started_at,
+    isPlaying: gameState?.status === "playing",
+    currentDrawer: gameState?.current_drawer,
   });
 
   if (isRoomError)
@@ -141,6 +150,7 @@ export function RoomView() {
           isDrawer={isDrawer}
           word={myWord}
           wordLength={gameState.word_length}
+          revealedLetters={revealedLetters}
         />
         <DrawingCanvas
           isDrawer={isDrawer}
