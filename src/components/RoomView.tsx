@@ -18,6 +18,8 @@ import { getGameState, startGame, getMyWord } from "@/services/game";
 import { DrawingCanvas } from "./DrawingCanvas";
 import { WordDisplay } from "./DisplayWord";
 import { useWordReveal } from "@/hooks/useWordReveal";
+import { useGuessChat } from "@/hooks/useGuessChat";
+import { GuessChat } from "./GuessChat";
 
 export function RoomView() {
   const { slug } = useParams({ from: "/rooms/$slug" });
@@ -128,6 +130,16 @@ export function RoomView() {
     currentDrawer: gameState?.current_drawer,
   });
 
+  const { messages, sendMessage, requestSnapshot } = useGuessChat(channel, {
+    userId: user?.id,
+    displayName: user?.user_metadata?.display_name ?? "Unknown",
+    currentDrawer: gameState?.current_drawer,
+  });
+
+  useEffect(() => {
+    if (channel && gameState?.status === "playing") requestSnapshot();
+  }, [channel, gameState?.status, requestSnapshot]);
+
   if (isRoomError)
     return (
       <Card className="w-full max-w-sm">
@@ -145,18 +157,27 @@ export function RoomView() {
 
   if (gameState?.status === "playing") {
     return (
-      <div className="flex flex-col gap-3 w-full max-w-2xl mx-auto">
-        <WordDisplay
-          isDrawer={isDrawer}
-          word={myWord}
-          wordLength={gameState.word_length}
-          revealedLetters={revealedLetters}
-        />
-        <DrawingCanvas
-          isDrawer={isDrawer}
-          channel={channel}
-          gameState={gameState}
-        />
+      <div className="flex flex-col lg:flex-row gap-3 w-full max-w-6xl mx-auto">
+        <div className="flex flex-col gap-3 flex-1">
+          <WordDisplay
+            isDrawer={isDrawer}
+            word={myWord}
+            wordLength={gameState.word_length}
+            revealedLetters={revealedLetters}
+          />
+          <DrawingCanvas
+            isDrawer={isDrawer}
+            channel={channel}
+            gameState={gameState}
+          />
+        </div>
+        <div className="w-100 h-64 lg:h-auto">
+          <GuessChat
+            messages={messages}
+            onSend={sendMessage}
+            disabled={isDrawer}
+          />
+        </div>
       </div>
     );
   }
