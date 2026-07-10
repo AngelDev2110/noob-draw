@@ -6,3 +6,10 @@ type Stroke = {
   width: number;
   points: Point[];
 };
+
+type ChatMessage = {
+  id: string;
+  userId: string;
+  displayName: string;
+  text: string;
+};
