@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import type { RealtimeChannel } from "@supabase/supabase-js";
+import { useBroadcast } from "@/hooks/useBroadcast";
 
 export function useGuessChat(
   channel: RealtimeChannel | null,
@@ -16,6 +17,11 @@ export function useGuessChat(
     messagesRef.current = messages;
   }, [messages]);
 
+  const userIdRef = useRef(opts.userId);
+  useEffect(() => {
+    userIdRef.current = opts.userId;
+  });
+
   const prevDrawer = useRef(opts.currentDrawer);
   useEffect(() => {
     if (prevDrawer.current !== opts.currentDrawer) {
@@ -24,29 +30,37 @@ export function useGuessChat(
     }
   }, [opts.currentDrawer]);
 
-  useEffect(() => {
-    if (!channel) return;
+  useBroadcast<ChatMessage>(channel, "chat_message", (payload) => {
+    setMessages((prev) => [...prev, payload]);
+  });
 
-    channel
-      .on("broadcast", { event: "chat_message" }, ({ payload }) => {
-        setMessages((prev) => [...prev, payload as ChatMessage]);
-      })
-      .on("broadcast", { event: "request_chat_snapshot" }, ({ payload }) => {
-        channel.send({
-          type: "broadcast",
-          event: "chat_snapshot",
-          payload: {
-            to: payload.from,
-            messages: messagesRef.current,
-          },
-        });
-      })
-      .on("broadcast", { event: "chat_snapshot" }, ({ payload }) => {
-        if (payload.to === opts.userId && messagesRef.current.length === 0) {
-          setMessages(payload.messages as ChatMessage[]);
-        }
+  useBroadcast<{ from: string }>(
+    channel,
+    "request_chat_snapshot",
+    (payload) => {
+      channel?.send({
+        type: "broadcast",
+        event: "chat_snapshot",
+        payload: {
+          to: payload.from,
+          messages: messagesRef.current,
+        },
       });
-  }, [channel, opts.userId]);
+    },
+  );
+
+  useBroadcast<{ to: string; messages: ChatMessage[] }>(
+    channel,
+    "chat_snapshot",
+    (payload) => {
+      if (
+        payload.to === userIdRef.current &&
+        messagesRef.current.length === 0
+      ) {
+        setMessages(payload.messages);
+      }
+    },
+  );
 
   const sendMessage = useCallback(
     (text: string) => {

@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import type { RealtimeChannel } from "@supabase/supabase-js";
+import { useBroadcast } from "@/hooks/useBroadcast";
 
 type Point = { x: number; y: number };
 type Tool = "pen" | "eraser";
@@ -31,26 +32,21 @@ export function useCanvasSync(
     handlersRef.current = handlers;
   }, [handlers]);
 
-  useEffect(() => {
-    if (!channel) return;
-
-    channel
-      .on("broadcast", { event: "stroke_batch" }, ({ payload }) => {
-        handlersRef.current.onRemoteBatch(payload.meta, payload.points);
-      })
-      .on("broadcast", { event: "stroke_end" }, () => {
-        handlersRef.current.onRemoteStrokeEnd();
-      })
-      .on("broadcast", { event: "clear_all" }, () => {
-        handlersRef.current.onRemoteClear();
-      })
-      .on("broadcast", { event: "request_snapshot" }, () => {
-        handlersRef.current.onSnapshotRequest();
-      })
-      .on("broadcast", { event: "snapshot" }, ({ payload }) => {
-        handlersRef.current.onSnapshot(payload.strokes);
-      });
-  }, [channel]);
+  useBroadcast<{ meta: Omit<Stroke, "points">; points: Point[] }>(
+    channel,
+    "stroke_batch",
+    (payload) => handlersRef.current.onRemoteBatch(payload.meta, payload.points),
+  );
+  useBroadcast(channel, "stroke_end", () =>
+    handlersRef.current.onRemoteStrokeEnd(),
+  );
+  useBroadcast(channel, "clear_all", () => handlersRef.current.onRemoteClear());
+  useBroadcast(channel, "request_snapshot", () =>
+    handlersRef.current.onSnapshotRequest(),
+  );
+  useBroadcast<{ strokes: Stroke[] }>(channel, "snapshot", (payload) =>
+    handlersRef.current.onSnapshot(payload.strokes),
+  );
 
   // ---- (drawer) ----
   function startBroadcastStroke(meta: Omit<Stroke, "points">) {
