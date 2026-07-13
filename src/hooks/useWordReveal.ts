@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import { REVEAL_INTERVAL } from "@/constants/game";
+import { useBroadcast } from "@/hooks/useBroadcast";
 
 function seededShuffle(length: number, seed: string): number[] {
   const indices = Array.from({ length }, (_, i) => i);
@@ -65,41 +66,38 @@ export function useWordReveal(
     }
   }, [opts.currentDrawer]);
 
-  useEffect(() => {
-    if (!channel) return;
-    channel.on("broadcast", { event: "letter_revealed" }, ({ payload }) => {
+  useBroadcast<{ position: number; letter: string }>(
+    channel,
+    "letter_revealed",
+    (payload) => {
       setRevealedLetters((prev) =>
         new Map(prev).set(payload.position, payload.letter),
       );
-    });
-  }, [channel]);
+    },
+  );
 
-  useEffect(() => {
-    if (!channel) return;
-    channel.on("broadcast", { event: "request_hints" }, () => {
-      const o = optsRef.current;
-      if (!o.isDrawer || !o.myWord || !o.turnStartedAt || !o.isPlaying) return;
+  useBroadcast(channel, "request_hints", () => {
+    const o = optsRef.current;
+    if (!o.isDrawer || !o.myWord || !o.turnStartedAt || !o.isPlaying) return;
 
-      const word = o.myWord;
-      const turnStartedAt = o.turnStartedAt;
-      const secondsElapsed =
-        (Date.now() + o.serverOffset - new Date(turnStartedAt).getTime()) /
-        1000;
-      const positions = getRevealedPositionsForTime(
-        word,
-        turnStartedAt,
-        secondsElapsed,
-      );
+    const word = o.myWord;
+    const turnStartedAt = o.turnStartedAt;
+    const secondsElapsed =
+      (Date.now() + o.serverOffset - new Date(turnStartedAt).getTime()) / 1000;
+    const positions = getRevealedPositionsForTime(
+      word,
+      turnStartedAt,
+      secondsElapsed,
+    );
 
-      for (const position of positions) {
-        channel.send({
-          type: "broadcast",
-          event: "letter_revealed",
-          payload: { position, letter: word[position] },
-        });
-      }
-    });
-  }, [channel]);
+    for (const position of positions) {
+      channel?.send({
+        type: "broadcast",
+        event: "letter_revealed",
+        payload: { position, letter: word[position] },
+      });
+    }
+  });
 
   useEffect(() => {
     if (
