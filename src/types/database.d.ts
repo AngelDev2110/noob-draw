@@ -18,7 +18,9 @@ export type Database = {
         Row: {
           current_drawer: string | null
           current_word: string | null
+          guessed_user_ids: string[]
           room_id: string
+          round_end_started_at: string | null
           round_number: number | null
           status: string
           turn_started_at: string | null
@@ -26,7 +28,9 @@ export type Database = {
         Insert: {
           current_drawer?: string | null
           current_word?: string | null
+          guessed_user_ids?: string[]
           room_id: string
+          round_end_started_at?: string | null
           round_number?: number | null
           status?: string
           turn_started_at?: string | null
@@ -34,7 +38,9 @@ export type Database = {
         Update: {
           current_drawer?: string | null
           current_word?: string | null
+          guessed_user_ids?: string[]
           room_id?: string
+          round_end_started_at?: string | null
           round_number?: number | null
           status?: string
           turn_started_at?: string | null
@@ -128,6 +134,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_and_advance_turn: {
+        Args: { p_room_id: string }
+        Returns: undefined
+      }
       create_room_with_host: {
         Args: { room_slug: string }
         Returns: {
@@ -156,10 +166,18 @@ export type Database = {
         Args: { p_room_id: string }
         Returns: {
           current_drawer: string
+          round_end_started_at: string
           round_number: number
           status: string
           turn_started_at: string
           word_length: number
+        }[]
+      }
+      get_my_guess_status: {
+        Args: { p_room_id: string }
+        Returns: {
+          already_guessed: boolean
+          revealed_word: string
         }[]
       }
       get_my_word: { Args: { p_room_id: string }; Returns: string }
@@ -171,8 +189,19 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_round_end_word: { Args: { p_room_id: string }; Returns: string }
+      get_server_time: { Args: never; Returns: string }
       is_approved_member: { Args: { check_room_id: string }; Returns: boolean }
       start_game: { Args: { p_room_id: string }; Returns: undefined }
+      submit_guess: {
+        Args: { p_guess: string; p_room_id: string }
+        Returns: {
+          correct: boolean
+          points_awarded: number
+          revealed_word: string
+        }[]
+      }
+      unaccent: { Args: { "": string }; Returns: string }
     }
     Enums: {
       [_ in never]: never

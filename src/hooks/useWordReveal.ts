@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { RealtimeChannel } from "@supabase/supabase-js";
+import { REVEAL_INTERVAL } from "@/constants/game";
 
 function seededShuffle(length: number, seed: string): number[] {
   const indices = Array.from({ length }, (_, i) => i);
@@ -28,7 +29,7 @@ function getRevealedPositionsForTime(
   secondsElapsed: number,
 ): number[] {
   const maxReveals = Math.min(
-    Math.floor(secondsElapsed / 15),
+    Math.floor(secondsElapsed / REVEAL_INTERVAL),
     Math.floor(word.length / 2),
   );
   const order = seededShuffle(word.length, word + turnStartedAt);
@@ -43,6 +44,7 @@ export function useWordReveal(
     turnStartedAt: string | null | undefined;
     isPlaying: boolean;
     currentDrawer: string | null | undefined;
+    serverOffset: number;
   },
 ) {
   const [revealedLetters, setRevealedLetters] = useState<Map<number, string>>(
@@ -81,7 +83,8 @@ export function useWordReveal(
       const word = o.myWord;
       const turnStartedAt = o.turnStartedAt;
       const secondsElapsed =
-        (Date.now() - new Date(turnStartedAt).getTime()) / 1000;
+        (Date.now() + o.serverOffset - new Date(turnStartedAt).getTime()) /
+        1000;
       const positions = getRevealedPositionsForTime(
         word,
         turnStartedAt,
@@ -109,11 +112,12 @@ export function useWordReveal(
 
     const word = opts.myWord;
     const turnStartedAt = opts.turnStartedAt;
+    const serverOffset = opts.serverOffset;
     let lastSentCount = 0;
 
     const interval = setInterval(() => {
       const secondsElapsed =
-        (Date.now() - new Date(turnStartedAt).getTime()) / 1000;
+        (Date.now() + serverOffset - new Date(turnStartedAt).getTime()) / 1000;
       const positions = getRevealedPositionsForTime(
         word,
         turnStartedAt,
@@ -131,7 +135,14 @@ export function useWordReveal(
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [channel, opts.isDrawer, opts.myWord, opts.isPlaying, opts.turnStartedAt]);
+  }, [
+    channel,
+    opts.isDrawer,
+    opts.myWord,
+    opts.isPlaying,
+    opts.turnStartedAt,
+    opts.serverOffset,
+  ]);
 
   useEffect(() => {
     if (!channel) return;
