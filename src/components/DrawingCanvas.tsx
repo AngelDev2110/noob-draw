@@ -114,6 +114,18 @@ export function DrawingCanvas({
     strokesRef.current = strokes;
   }, [strokes]);
 
+  // Wipe the board when the turn (drawer) changes. DrawingCanvas isn't
+  // remounted between turns, so the previous drawing must be cleared explicitly.
+  const prevDrawer = useRef(gameState.current_drawer);
+  useEffect(() => {
+    if (prevDrawer.current !== gameState.current_drawer) {
+      prevDrawer.current = gameState.current_drawer;
+      currentStroke.current = null;
+      remoteStroke.current = null;
+      setStrokes([]);
+    }
+  }, [gameState.current_drawer]);
+
   function getNormalizedPoint(
     event: React.PointerEvent<HTMLCanvasElement>,
   ): Point {
