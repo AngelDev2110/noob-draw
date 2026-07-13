@@ -6,23 +6,37 @@ import { Send } from "lucide-react";
 export function GuessChat({
   messages,
   onSend,
+  onGuess,
   disabled,
 }: {
   messages: ChatMessage[];
   onSend: (text: string) => void;
+  onGuess: (
+    text: string,
+  ) => Promise<{ correct: boolean; points_awarded: number }>;
   disabled: boolean;
 }) {
   const [input, setInput] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
   }, [messages]);
 
-  function handleSend() {
-    if (!input.trim()) return;
-    onSend(input);
+  async function handleSend() {
+    const text = input.trim();
+    if (!text || isSubmitting) return;
+
     setInput("");
+    setIsSubmitting(true);
+
+    try {
+      const result = await onGuess(text);
+      if (!result.correct) onSend(text);
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -50,14 +64,18 @@ export function GuessChat({
         <Input
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleSend()}
-          placeholder={disabled ? "You're drawing…" : "Type your guess…"}
+          onKeyDown={(e) =>
+            e.key === "Enter" && !isSubmitting && !disabled && handleSend()
+          }
+          placeholder={
+            disabled ? "Ups! Can't guess right now" : "Type your guess…"
+          }
           disabled={disabled}
         />
         <Button
           size="icon"
           onClick={handleSend}
-          disabled={disabled || !input.trim()}
+          disabled={disabled || isSubmitting || !input.trim()}
         >
           <Send className="h-4 w-4" />
         </Button>

@@ -29,6 +29,9 @@ export function useGameChannel(roomId: string | undefined) {
         );
         setOnlineUserIds(ids);
       })
+      .on("broadcast", { event: "turn_changed" }, () => {
+        queryClient.invalidateQueries({ queryKey: ["gameState", roomId] });
+      })
       .subscribe(async (status) => {
         if (status === "SUBSCRIBED") {
           await _channel.track({
