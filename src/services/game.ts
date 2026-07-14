@@ -44,6 +44,14 @@ export const checkAndAdvanceTurn = async (roomId: string) => {
   if (error) throw new Error(error.message);
 };
 
+export const getScoreboard = async (roomId: string) => {
+  const { data, error } = await supabase.rpc("get_scoreboard", {
+    p_room_id: roomId,
+  });
+  if (error) throw new Error(error.message);
+  return data;
+};
+
 export const getRoundEndWord = async (roomId: string) => {
   const { data, error } = await supabase.rpc("get_round_end_word", {
     p_room_id: roomId,

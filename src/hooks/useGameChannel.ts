@@ -31,6 +31,7 @@ export function useGameChannel(roomId: string | undefined) {
       })
       .on("broadcast", { event: "turn_changed" }, () => {
         queryClient.invalidateQueries({ queryKey: ["gameState", roomId] });
+        queryClient.invalidateQueries({ queryKey: ["scoreboard", roomId] });
       })
       .subscribe(async (status) => {
         if (status === "SUBSCRIBED") {

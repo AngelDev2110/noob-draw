@@ -58,6 +58,9 @@ export function useCorrectGuess(
         displayName: payload.displayName,
         points: payload.points,
       });
+      queryClient.invalidateQueries({
+        queryKey: ["scoreboard", identityRef.current.roomId],
+      });
     },
   );
 
