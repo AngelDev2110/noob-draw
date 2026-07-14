@@ -200,6 +200,7 @@ export type Database = {
       }
       get_server_time: { Args: never; Returns: string }
       is_approved_member: { Args: { check_room_id: string }; Returns: boolean }
+      return_to_lobby: { Args: { p_room_id: string }; Returns: undefined }
       start_game: { Args: { p_room_id: string }; Returns: undefined }
       submit_guess: {
         Args: { p_guess: string; p_room_id: string }

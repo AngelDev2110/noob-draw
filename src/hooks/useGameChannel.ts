@@ -33,6 +33,10 @@ export function useGameChannel(roomId: string | undefined) {
         queryClient.invalidateQueries({ queryKey: ["gameState", roomId] });
         queryClient.invalidateQueries({ queryKey: ["scoreboard", roomId] });
       })
+      .on("broadcast", { event: "returned_to_lobby" }, () => {
+        queryClient.invalidateQueries({ queryKey: ["gameState", roomId] });
+        queryClient.invalidateQueries({ queryKey: ["scoreboard", roomId] });
+      })
       .subscribe(async (status) => {
         if (status === "SUBSCRIBED") {
           await _channel.track({
@@ -59,5 +63,18 @@ export function useGameChannel(roomId: string | undefined) {
     });
   }
 
-  return { broadcastGameStarted, onlineUserIds, channel };
+  function broadcastReturnToLobby() {
+    channel?.send({
+      type: "broadcast",
+      event: "returned_to_lobby",
+      payload: {},
+    });
+  }
+
+  return {
+    broadcastGameStarted,
+    broadcastReturnToLobby,
+    onlineUserIds,
+    channel,
+  };
 }

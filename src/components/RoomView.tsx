@@ -17,7 +17,7 @@ import { GameOverView } from "@/components/GameOverView";
 import { useGameChannel } from "@/hooks/useGameChannel";
 import { useServerClock } from "@/hooks/useServerClock";
 import { useRoomMembershipRealtime } from "@/hooks/useRoomMembershipRealtime";
-import { getGameState, startGame } from "@/services/game";
+import { getGameState, startGame, returnToLobby } from "@/services/game";
 import {
   TURN_DURATION,
   ROUND_END_DURATION,
@@ -54,9 +54,8 @@ export function RoomView() {
     },
   });
 
-  const { broadcastGameStarted, onlineUserIds, channel } = useGameChannel(
-    room?.id,
-  );
+  const { broadcastGameStarted, broadcastReturnToLobby, onlineUserIds, channel } =
+    useGameChannel(room?.id);
 
   const { data: gameState } = useQuery({
     queryKey: ["gameState", room?.id],
@@ -68,6 +67,13 @@ export function RoomView() {
     mutationFn: () => startGame(room!.id),
     onSuccess: () => {
       broadcastGameStarted();
+    },
+  });
+
+  const returnToLobbyMutation = useMutation({
+    mutationFn: () => returnToLobby(room!.id),
+    onSuccess: () => {
+      broadcastReturnToLobby();
     },
   });
 
@@ -133,7 +139,7 @@ export function RoomView() {
           user={user}
           isHost={isHost}
           onlineUserIds={onlineUserIds}
-          startGameMutation={startGameMutation}
+          returnToLobbyMutation={returnToLobbyMutation}
         />
       </Card>
     );
