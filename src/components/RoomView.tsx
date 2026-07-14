@@ -2,6 +2,7 @@ import {
   getRoomBySlug,
   getMyMembership,
   requestToJoin,
+  updateRoomLanguage,
 } from "@/services/rooms";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useParams } from "@tanstack/react-router";
@@ -67,6 +68,13 @@ export function RoomView() {
     mutationFn: () => startGame(room!.id),
     onSuccess: () => {
       broadcastGameStarted();
+    },
+  });
+
+  const updateLanguageMutation = useMutation({
+    mutationFn: (language: string) => updateRoomLanguage(room!.id, language),
+    onSuccess: (updatedRoom) => {
+      queryClient.setQueryData(["room", slug], updatedRoom);
     },
   });
 
@@ -140,6 +148,7 @@ export function RoomView() {
           user={user}
           isHost={isHost}
           startGameMutation={startGameMutation}
+          updateLanguageMutation={updateLanguageMutation}
         />
       </Card>
     );

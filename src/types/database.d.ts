@@ -210,6 +210,22 @@ export type Database = {
         }[]
       }
       unaccent: { Args: { "": string }; Returns: string }
+      update_room_language: {
+        Args: { p_language: string; p_room_id: string }
+        Returns: {
+          created_at: string | null
+          created_by: string | null
+          id: string
+          language: string
+          slug: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "rooms"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
     }
     Enums: {
       [_ in never]: never
