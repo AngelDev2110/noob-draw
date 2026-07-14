@@ -3,6 +3,12 @@ import { Eraser, Trash2 } from "lucide-react";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import { useCanvasSync } from "@/hooks/useCanvasSync";
 import type { getGameState } from "@/services/game";
+import { Button } from "@/components/ui/button";
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@/components/ui/popover";
 const COLORS = [
   "#1a1a1a",
   "#e8620a",
@@ -109,6 +115,7 @@ export function DrawingCanvas({
   const [tool, setTool] = useState<Tool>("pen");
   const [color, setColor] = useState(COLORS[0]);
   const [width, setWidth] = useState(WIDTHS[1]);
+  const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
 
   useEffect(() => {
     strokesRef.current = strokes;
@@ -197,6 +204,7 @@ export function DrawingCanvas({
     currentStroke.current = null;
     setStrokes([]);
     canvasSync.broadcastClear();
+    setClearConfirmOpen(false);
   }
 
   useEffect(() => {
@@ -305,12 +313,37 @@ export function DrawingCanvas({
             >
               <Eraser className="h-4 w-4" />
             </button>
-            <button
-              onClick={handleClearAll}
-              className="flex items-center justify-center h-9 w-9 rounded-lg text-destructive hover:bg-destructive/10 transition-colors"
+            <Popover
+              open={clearConfirmOpen}
+              onOpenChange={setClearConfirmOpen}
             >
-              <Trash2 className="h-4 w-4" />
-            </button>
+              <PopoverTrigger asChild>
+                <button className="flex items-center justify-center h-9 w-9 rounded-lg text-destructive hover:bg-destructive/10 transition-colors">
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent align="end" className="w-64">
+                <p className="text-sm">
+                  Clear the whole drawing? This can&apos;t be undone.
+                </p>
+                <div className="mt-3 flex justify-end gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setClearConfirmOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={handleClearAll}
+                  >
+                    Clear all
+                  </Button>
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
         </div>
       )}
