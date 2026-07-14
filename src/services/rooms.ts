@@ -11,6 +11,17 @@ export async function createRoomWithHost(slug: string) {
   return data;
 }
 
+export async function updateRoomLanguage(roomId: string, language: string) {
+  const { data, error } = await supabase.rpc("update_room_language", {
+    p_room_id: roomId,
+    p_language: language,
+  });
+
+  if (error) throw new Error(error.message);
+
+  return data;
+}
+
 export async function getRoomBySlug(slug: string) {
   const { data, error } = await supabase
     .from("rooms")

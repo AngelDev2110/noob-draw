@@ -1,7 +1,11 @@
 import type { User } from "@supabase/supabase-js";
 import type { UseMutationResult } from "@tanstack/react-query";
 import { useQuery } from "@tanstack/react-query";
-import { getApprovedMembers, getRoomBySlug } from "@/services/rooms";
+import {
+  getApprovedMembers,
+  getRoomBySlug,
+  updateRoomLanguage,
+} from "@/services/rooms";
 import { startGame } from "@/services/game";
 import { CardContent, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,11 +14,14 @@ import { ApprovedMembers } from "@/components/ApprovedMembers";
 import { PendingMembers } from "@/components/PendingMembers";
 import { GamepadDirectional } from "lucide-react";
 
+const ROOM_LANGUAGES = ["en", "es"] as const;
+
 export function RoomLobbyContent({
   room,
   user,
   isHost,
   startGameMutation,
+  updateLanguageMutation,
   onlineUserIds,
 }: {
   room: Awaited<ReturnType<typeof getRoomBySlug>>;
@@ -24,6 +31,11 @@ export function RoomLobbyContent({
     Awaited<ReturnType<typeof startGame>>,
     Error,
     void
+  >;
+  updateLanguageMutation: UseMutationResult<
+    Awaited<ReturnType<typeof updateRoomLanguage>>,
+    Error,
+    string
   >;
   onlineUserIds: Set<string>;
 }) {
@@ -52,6 +64,27 @@ export function RoomLobbyContent({
       {isHost && (
         <div>
           <PendingMembers className="mt-4" room={room} />
+          <div className="mt-4 flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">
+              Word language:
+            </span>
+            <div className="flex gap-1">
+              {ROOM_LANGUAGES.map((lang) => (
+                <Button
+                  key={lang}
+                  size="sm"
+                  variant={room.language === lang ? "default" : "outline"}
+                  disabled={
+                    updateLanguageMutation.isPending ||
+                    startGameMutation.isPending
+                  }
+                  onClick={() => updateLanguageMutation.mutate(lang)}
+                >
+                  {lang.toUpperCase()}
+                </Button>
+              ))}
+            </div>
+          </div>
           <Button
             size={"lg"}
             className="mt-4 w-full"
