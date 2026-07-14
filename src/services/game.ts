@@ -13,6 +13,11 @@ export const startGame = async (roomId: string) => {
   if (error) throw new Error(error.message);
 };
 
+export const returnToLobby = async (roomId: string) => {
+  const { error } = await supabase.rpc("return_to_lobby", { p_room_id: roomId });
+  if (error) throw new Error(error.message);
+};
+
 export const getMyWord = async (roomId: string) => {
   const { data, error } = await supabase.rpc("get_my_word", {
     p_room_id: roomId,

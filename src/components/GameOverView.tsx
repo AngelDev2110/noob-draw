@@ -1,8 +1,8 @@
 import type { User } from "@supabase/supabase-js";
 import type { UseMutationResult } from "@tanstack/react-query";
-import { Trophy, GamepadDirectional } from "lucide-react";
+import { Trophy, DoorOpen } from "lucide-react";
 import type { getRoomBySlug } from "@/services/rooms";
-import type { startGame } from "@/services/game";
+import type { returnToLobby } from "@/services/game";
 import { CardContent, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Scoreboard } from "@/components/Scoreboard";
@@ -12,14 +12,14 @@ export function GameOverView({
   user,
   isHost,
   onlineUserIds,
-  startGameMutation,
+  returnToLobbyMutation,
 }: {
   room: Awaited<ReturnType<typeof getRoomBySlug>>;
   user: User | null | undefined;
   isHost: boolean;
   onlineUserIds: Set<string>;
-  startGameMutation: UseMutationResult<
-    Awaited<ReturnType<typeof startGame>>,
+  returnToLobbyMutation: UseMutationResult<
+    Awaited<ReturnType<typeof returnToLobby>>,
     Error,
     void
   >;
@@ -44,15 +44,15 @@ export function GameOverView({
         <Button
           size="lg"
           className="w-full"
-          onClick={() => startGameMutation.mutate()}
-          disabled={startGameMutation.isPending}
+          onClick={() => returnToLobbyMutation.mutate()}
+          disabled={returnToLobbyMutation.isPending}
         >
-          {startGameMutation.isPending ? "Starting..." : "Play again"}{" "}
-          <GamepadDirectional />
+          {returnToLobbyMutation.isPending ? "Returning..." : "Back to lobby"}{" "}
+          <DoorOpen />
         </Button>
       ) : (
         <p className="text-center text-sm text-muted-foreground">
-          Waiting for the host to start a new game…
+          Waiting for the host to return to the lobby…
         </p>
       )}
     </CardContent>
