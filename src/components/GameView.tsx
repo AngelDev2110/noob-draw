@@ -123,6 +123,9 @@ export function GameView({
               <RoundEndOverlay
                 word={roundEndWord}
                 secondsLeft={roundEndSecondsLeft}
+                roomId={room.id}
+                currentUserId={user?.id}
+                onlineUserIds={onlineUserIds}
               />
             )}
           </div>

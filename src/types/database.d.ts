@@ -190,6 +190,14 @@ export type Database = {
         }[]
       }
       get_round_end_word: { Args: { p_room_id: string }; Returns: string }
+      get_scoreboard: {
+        Args: { p_room_id: string }
+        Returns: {
+          display_name: string
+          score: number
+          user_id: string
+        }[]
+      }
       get_server_time: { Args: never; Returns: string }
       is_approved_member: { Args: { check_room_id: string }; Returns: boolean }
       start_game: { Args: { p_room_id: string }; Returns: undefined }

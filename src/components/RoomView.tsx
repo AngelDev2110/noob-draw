@@ -12,6 +12,7 @@ import { RoomErrorContent } from "@/components/RoomErrorContent";
 import { RoomLobbyContent } from "@/components/RoomLobbyContent";
 import { RoomJoinContent } from "@/components/RoomJoinContent";
 import { GameView } from "@/components/GameView";
+import { GameOverView } from "@/components/GameOverView";
 import { useGameChannel } from "@/hooks/useGameChannel";
 import { useServerClock } from "@/hooks/useServerClock";
 import { useRoomMembershipRealtime } from "@/hooks/useRoomMembershipRealtime";
@@ -113,6 +114,20 @@ export function RoomView() {
         serverOffset={serverOffset}
         onlineUserIds={onlineUserIds}
       />
+    );
+  }
+
+  if (gameState?.status === "finished" && membership?.approved) {
+    return (
+      <Card className="w-full max-w-md">
+        <GameOverView
+          room={room}
+          user={user}
+          isHost={isHost}
+          onlineUserIds={onlineUserIds}
+          startGameMutation={startGameMutation}
+        />
+      </Card>
     );
   }
 
