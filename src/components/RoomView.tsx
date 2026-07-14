@@ -14,6 +14,7 @@ import { RoomLobbyContent } from "@/components/RoomLobbyContent";
 import { RoomJoinContent } from "@/components/RoomJoinContent";
 import { GameView } from "@/components/GameView";
 import { GameOverView } from "@/components/GameOverView";
+import { ExitRoomButton } from "@/components/ExitRoomButton";
 import { useGameChannel } from "@/hooks/useGameChannel";
 import { useServerClock } from "@/hooks/useServerClock";
 import { useRoomMembershipRealtime } from "@/hooks/useRoomMembershipRealtime";
@@ -23,6 +24,23 @@ import {
   ROUND_END_DURATION,
   STALE_BUFFER,
 } from "@/constants/game";
+
+function RoomContent({
+  maxWidth,
+  children,
+}: {
+  maxWidth: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className={`flex w-full ${maxWidth} mx-auto flex-col gap-2`}>
+      <div className="flex justify-end">
+        <ExitRoomButton />
+      </div>
+      {children}
+    </div>
+  );
+}
 
 export function RoomView() {
   const { slug } = useParams({ from: "/rooms/$slug" });
@@ -103,23 +121,26 @@ export function RoomView() {
     (gameState?.status === "round_end" &&
       isTimestampFresh(gameState.round_end_started_at, ROUND_END_DURATION));
 
-  if (isRoomError)
-    return (
+  let content;
+  let maxWidth = "max-w-sm";
+
+  if (isRoomError) {
+    content = (
       <Card className="w-full max-w-sm">
         <RoomErrorContent />
       </Card>
     );
-
-  if (isRoomLoading || isMembershipLoading)
-    return (
+  } else if (isRoomLoading || isMembershipLoading) {
+    content = (
       <Card className="w-full max-w-sm">
         <LobbySkeleton />
       </Card>
     );
-  if (!room) return <div>Room not found</div>;
-
-  if (isGameActive && gameState) {
-    return (
+  } else if (!room) {
+    content = <div>Room not found</div>;
+  } else if (isGameActive && gameState) {
+    maxWidth = "max-w-6xl";
+    content = (
       <GameView
         room={room}
         user={user}
@@ -129,10 +150,9 @@ export function RoomView() {
         onlineUserIds={onlineUserIds}
       />
     );
-  }
-
-  if (gameState?.status === "finished" && membership?.approved) {
-    return (
+  } else if (gameState?.status === "finished" && membership?.approved) {
+    maxWidth = "max-w-md";
+    content = (
       <Card className="w-full max-w-md">
         <GameOverView
           room={room}
@@ -143,10 +163,8 @@ export function RoomView() {
         />
       </Card>
     );
-  }
-
-  if (membership?.approved) {
-    return (
+  } else if (membership?.approved) {
+    content = (
       <Card className="w-full max-w-sm">
         <RoomLobbyContent
           onlineUserIds={onlineUserIds}
@@ -158,15 +176,17 @@ export function RoomView() {
         />
       </Card>
     );
+  } else {
+    content = (
+      <Card className="w-full max-w-sm">
+        <RoomJoinContent
+          user={user}
+          membership={membership}
+          joinMutation={joinMutation}
+        />
+      </Card>
+    );
   }
 
-  return (
-    <Card className="w-full max-w-sm">
-      <RoomJoinContent
-        user={user}
-        membership={membership}
-        joinMutation={joinMutation}
-      />
-    </Card>
-  );
+  return <RoomContent maxWidth={maxWidth}>{content}</RoomContent>;
 }
