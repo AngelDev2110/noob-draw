@@ -5,6 +5,7 @@ type Announcement = {
   id: string;
   displayName: string;
   points: number;
+  drawerPoints: number;
 };
 
 export function CorrectGuessOverlay({
@@ -50,6 +51,11 @@ export function CorrectGuessOverlay({
         <span className="text-2xl font-bold text-foreground bg-card/90 px-4 py-1 rounded-full">
           +{announcement.points} points
         </span>
+        {announcement.drawerPoints > 0 && (
+          <span className="text-sm font-semibold text-muted-foreground bg-card/70 px-3 py-0.5 rounded-full">
+            🎨 Drawer +{announcement.drawerPoints} points
+          </span>
+        )}
       </div>
     </div>
   );

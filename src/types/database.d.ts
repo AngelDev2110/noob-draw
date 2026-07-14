@@ -206,6 +206,7 @@ export type Database = {
         Args: { p_guess: string; p_room_id: string }
         Returns: {
           correct: boolean
+          drawer_points_awarded: number
           points_awarded: number
           revealed_word: string
         }[]

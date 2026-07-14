@@ -8,6 +8,7 @@ type Announcement = {
   id: string;
   displayName: string;
   points: number;
+  drawerPoints: number;
 };
 
 export function useCorrectGuess(
@@ -49,7 +50,7 @@ export function useCorrectGuess(
     }
   }, [opts.currentDrawer]);
 
-  useBroadcast<{ displayName: string; points: number }>(
+  useBroadcast<{ displayName: string; points: number; drawerPoints: number }>(
     channel,
     "correct_guess",
     (payload) => {
@@ -57,6 +58,7 @@ export function useCorrectGuess(
         id: crypto.randomUUID(),
         displayName: payload.displayName,
         points: payload.points,
+        drawerPoints: payload.drawerPoints,
       });
       queryClient.invalidateQueries({
         queryKey: ["scoreboard", identityRef.current.roomId],
@@ -86,6 +88,7 @@ export function useCorrectGuess(
           userId: userId!,
           displayName: displayName ?? "Unknown",
           points: result.points_awarded,
+          drawerPoints: result.drawer_points_awarded,
         },
       });
       queryClient.invalidateQueries({ queryKey: ["members", roomId] });
