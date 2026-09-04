@@ -45,7 +45,7 @@ export function useRoomMembershipRealtime(
           event: "UPDATE",
           schema: "public",
           table: "room_members",
-          filter: `room_id=eq.${room.id}`,
+          filter: `user_id=eq.${user.id}`,
         },
         () => {
           queryClient.invalidateQueries({ queryKey: ["membership", room.id] });
