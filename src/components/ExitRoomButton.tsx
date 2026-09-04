@@ -1,20 +1,34 @@
-import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
+import { useMutation } from "@tanstack/react-query";
 import { LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { leaveRoom } from "@/services/rooms";
 import {
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
-} from "@/components/ui/popover";
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
 
-export function ExitRoomButton() {
+export function ExitRoomButton({ roomId }: { roomId: string | undefined }) {
   const navigate = useNavigate();
-  const [open, setOpen] = useState(false);
+  const leaveMutation = useMutation({
+    mutationFn: () => leaveRoom(roomId!),
+  });
+
+  function handleExit() {
+    if (roomId) leaveMutation.mutate();
+    navigate({ to: "/" });
+  }
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
         <Button
           variant="ghost"
           size="sm"
@@ -23,24 +37,19 @@ export function ExitRoomButton() {
           <LogOut className="h-4 w-4" />
           Exit
         </Button>
-      </PopoverTrigger>
-      <PopoverContent align="end" className="w-64">
-        <p className="text-sm">
-          Leave this room? You&apos;ll lose your progress in the current game.
-        </p>
-        <div className="mt-3 flex justify-end gap-2">
-          <Button variant="ghost" size="sm" onClick={() => setOpen(false)}>
-            Cancel
-          </Button>
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={() => navigate({ to: "/" })}
-          >
-            Exit
-          </Button>
-        </div>
-      </PopoverContent>
-    </Popover>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Leave this room?</AlertDialogTitle>
+          <AlertDialogDescription>
+            You&apos;ll lose your progress in the current game.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction onClick={handleExit}>Exit</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }

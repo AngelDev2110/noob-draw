@@ -3,23 +3,32 @@ import { Eraser, Trash2 } from "lucide-react";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import { useCanvasSync } from "@/hooks/useCanvasSync";
 import type { getGameState } from "@/services/game";
-import { Button } from "@/components/ui/button";
 import {
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
-} from "@/components/ui/popover";
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
 const COLORS = [
-  "#1a1a1a",
-  "#e8620a",
-  "#e11d48",
-  "#f59e0b",
-  "#16a34a",
-  "#2563eb",
-  "#7c3aed",
-  "#db2777",
+  { value: "#1a1a1a", name: "Black" },
+  { value: "#e8620a", name: "Orange" },
+  { value: "#e11d48", name: "Red" },
+  { value: "#f59e0b", name: "Amber" },
+  { value: "#16a34a", name: "Green" },
+  { value: "#2563eb", name: "Blue" },
+  { value: "#7c3aed", name: "Violet" },
+  { value: "#db2777", name: "Pink" },
 ];
-const WIDTHS = [3, 6, 12];
+const WIDTHS = [
+  { value: 3, label: "Thin" },
+  { value: 6, label: "Medium" },
+  { value: 12, label: "Thick" },
+];
 const ERASER_WIDTH = 24;
 
 function applyStrokeStyle(ctx: CanvasRenderingContext2D, stroke: Stroke) {
@@ -113,9 +122,8 @@ export function DrawingCanvas({
   const [strokes, setStrokes] = useState<Stroke[]>([]);
 
   const [tool, setTool] = useState<Tool>("pen");
-  const [color, setColor] = useState(COLORS[0]);
-  const [width, setWidth] = useState(WIDTHS[1]);
-  const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
+  const [color, setColor] = useState(COLORS[0].value);
+  const [width, setWidth] = useState(WIDTHS[1].value);
 
   useEffect(() => {
     strokesRef.current = strokes;
@@ -204,7 +212,6 @@ export function DrawingCanvas({
     currentStroke.current = null;
     setStrokes([]);
     canvasSync.broadcastClear();
-    setClearConfirmOpen(false);
   }
 
   useEffect(() => {
@@ -259,19 +266,21 @@ export function DrawingCanvas({
       {isDrawer && (
         <div className="flex items-center gap-3 flex-wrap p-2 rounded-xl border bg-card">
           <div className="flex gap-1.5">
-            {COLORS.map((c) => (
+            {COLORS.map(({ value, name }) => (
               <button
-                key={c}
+                key={value}
                 onClick={() => {
-                  setColor(c);
+                  setColor(value);
                   setTool("pen");
                 }}
+                aria-label={`Color ${name}`}
+                aria-pressed={color === value && tool === "pen"}
                 className={`h-7 w-7 rounded-full transition-all ${
-                  color === c && tool === "pen"
+                  color === value && tool === "pen"
                     ? "ring-2 ring-foreground ring-offset-2 ring-offset-card scale-105"
-                    : "hover:scale-110"
+                    : "dark:border dark:border-border hover:scale-110"
                 }`}
-                style={{ backgroundColor: c }}
+                style={{ backgroundColor: value }}
               />
             ))}
           </div>
@@ -279,22 +288,24 @@ export function DrawingCanvas({
           <div className="h-6 w-px bg-border" />
 
           <div className="flex gap-1">
-            {WIDTHS.map((w) => (
+            {WIDTHS.map(({ value, label }) => (
               <button
-                key={w}
+                key={value}
                 onClick={() => {
-                  setWidth(w);
+                  setWidth(value);
                   setTool("pen");
                 }}
+                aria-label={`${label} stroke`}
+                aria-pressed={width === value && tool === "pen"}
                 className={`flex items-center justify-center h-9 w-9 rounded-lg transition-colors ${
-                  width === w && tool === "pen"
+                  width === value && tool === "pen"
                     ? "bg-primary/15 text-primary"
                     : "hover:bg-muted"
                 }`}
               >
                 <span
                   className="rounded-full bg-current"
-                  style={{ width: w + 2, height: w + 2 }}
+                  style={{ width: value + 2, height: value + 2 }}
                 />
               </button>
             ))}
@@ -305,6 +316,8 @@ export function DrawingCanvas({
           <div className="flex gap-1 ml-auto">
             <button
               onClick={() => setTool("eraser")}
+              aria-label="Eraser"
+              aria-pressed={tool === "eraser"}
               className={`flex items-center justify-center h-9 w-9 rounded-lg transition-colors ${
                 tool === "eraser"
                   ? "bg-primary/15 text-primary"
@@ -313,37 +326,30 @@ export function DrawingCanvas({
             >
               <Eraser className="h-4 w-4" />
             </button>
-            <Popover
-              open={clearConfirmOpen}
-              onOpenChange={setClearConfirmOpen}
-            >
-              <PopoverTrigger asChild>
-                <button className="flex items-center justify-center h-9 w-9 rounded-lg text-destructive hover:bg-destructive/10 transition-colors">
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <button
+                  aria-label="Clear drawing"
+                  className="flex items-center justify-center h-9 w-9 rounded-lg text-destructive hover:bg-destructive/10 transition-colors"
+                >
                   <Trash2 className="h-4 w-4" />
                 </button>
-              </PopoverTrigger>
-              <PopoverContent align="end" className="w-64">
-                <p className="text-sm">
-                  Clear the whole drawing? This can&apos;t be undone.
-                </p>
-                <div className="mt-3 flex justify-end gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setClearConfirmOpen(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={handleClearAll}
-                  >
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Clear the whole drawing?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This can&apos;t be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleClearAll}>
                     Clear all
-                  </Button>
-                </div>
-              </PopoverContent>
-            </Popover>
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </div>
       )}

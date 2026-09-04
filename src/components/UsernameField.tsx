@@ -4,13 +4,30 @@ import { Button } from "./ui/button";
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { changeDisplayName } from "@/services/auth";
+import { useAuth } from "@/context/AuthContext";
 import { Save, LoaderCircle } from "lucide-react";
 
+function baseName(displayName: string | undefined) {
+  return displayName?.replace(/#\d+$/, "") ?? "";
+}
+
 export function UsernameField() {
-  const [name, setName] = useState("");
+  const { user } = useAuth() || {};
+  const [name, setName] = useState(() =>
+    baseName(user?.user_metadata?.display_name),
+  );
+
   const nameMutation = useMutation({
     mutationFn: (displayName: string) => changeDisplayName(displayName),
   });
+
+  const feedback = nameMutation.isError
+    ? nameMutation.error.message
+    : nameMutation.isSuccess
+      ? `Saved as ${nameMutation.data.user?.user_metadata?.display_name}!`
+      : name.trim().length < 3
+        ? "Name must be at least 3 characters"
+        : "Looks good!";
 
   return (
     <Field>
@@ -22,12 +39,21 @@ export function UsernameField() {
             placeholder="Top 1° Noobie"
             value={name}
             maxLength={20}
-            onChange={(e) => setName(e.target.value)}
+            onChange={(e) => {
+              setName(e.target.value);
+              nameMutation.reset();
+            }}
           />
-          <FieldDescription className="text-xs text-muted-foreground">
-            {name.trim().length < 3
-              ? "Name must be at least 3 characters"
-              : "Looks good!"}
+          <FieldDescription
+            className={
+              nameMutation.isError
+                ? "text-xs text-destructive"
+                : nameMutation.isSuccess
+                  ? "text-xs text-primary"
+                  : "text-xs text-muted-foreground"
+            }
+          >
+            {feedback}
           </FieldDescription>
         </div>
         <Button

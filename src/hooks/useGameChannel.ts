@@ -9,9 +9,18 @@ export function useGameChannel(roomId: string | undefined) {
   const { user } = useAuth() || {};
   const [channel, setChannel] = useState<RealtimeChannel | null>(null);
   const [onlineUserIds, setOnlineUserIds] = useState<Set<string>>(new Set());
+  const [visibleUserIds, setVisibleUserIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (!roomId || !user) return;
+
+    function trackPresence(ch: RealtimeChannel) {
+      return ch.track({
+        user_id: user!.id,
+        display_name: user!.user_metadata?.display_name ?? "Unknown",
+        visible: document.visibilityState === "visible",
+      });
+    }
 
     const _channel = supabase
       .channel(`room-game-${roomId}`, {
@@ -21,13 +30,15 @@ export function useGameChannel(roomId: string | undefined) {
         queryClient.invalidateQueries({ queryKey: ["gameState", roomId] });
       })
       .on("presence", { event: "sync" }, () => {
-        const state = _channel.presenceState<{ user_id: string }>();
-        const ids = new Set(
-          Object.values(state).flatMap((entries) =>
-            entries.map((e) => e.user_id),
-          ),
+        const state = _channel.presenceState<{
+          user_id: string;
+          visible?: boolean;
+        }>();
+        const entries = Object.values(state).flat();
+        setOnlineUserIds(new Set(entries.map((e) => e.user_id)));
+        setVisibleUserIds(
+          new Set(entries.filter((e) => e.visible).map((e) => e.user_id)),
         );
-        setOnlineUserIds(ids);
       })
       .on("broadcast", { event: "turn_changed" }, () => {
         queryClient.invalidateQueries({ queryKey: ["gameState", roomId] });
@@ -39,19 +50,23 @@ export function useGameChannel(roomId: string | undefined) {
       })
       .subscribe(async (status) => {
         if (status === "SUBSCRIBED") {
-          await _channel.track({
-            user_id: user.id,
-            display_name: user.user_metadata?.display_name ?? "Unknown",
-          });
+          await trackPresence(_channel);
           setChannel(_channel);
         }
       });
 
+    function handleVisibilityChange() {
+      if (_channel.state === "joined") trackPresence(_channel);
+    }
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
     return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
       supabase.removeChannel(_channel);
       _channel.untrack({ user_id: user.id });
       setChannel(null);
       setOnlineUserIds(new Set());
+      setVisibleUserIds(new Set());
     };
   }, [roomId, user, queryClient]);
 
@@ -75,6 +90,7 @@ export function useGameChannel(roomId: string | undefined) {
     broadcastGameStarted,
     broadcastReturnToLobby,
     onlineUserIds,
+    visibleUserIds,
     channel,
   };
 }

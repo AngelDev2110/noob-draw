@@ -45,7 +45,7 @@ export function CorrectGuessOverlay({
           visible ? "scale-100" : "scale-90"
         }`}
       >
-        <span className="text-5xl font-extrabold text-primary drop-shadow-lg">
+        <span className="text-4xl font-extrabold text-primary bg-card/90 px-6 py-2 rounded-2xl drop-shadow-lg">
           {announcement.displayName} got it! 🎉
         </span>
         <span className="text-2xl font-bold text-foreground bg-card/90 px-4 py-1 rounded-full">

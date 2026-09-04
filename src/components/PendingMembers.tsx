@@ -2,12 +2,13 @@ import { useAuth } from "@/context/AuthContext";
 import {
   getPendingMembers,
   approveMember,
+  removeMember,
   getRoomBySlug,
 } from "@/services/rooms";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { UserCheck, Clock } from "lucide-react";
+import { UserCheck, UserX, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LoaderBar } from "./ui/LoaderBar";
 
@@ -39,6 +40,13 @@ export function PendingMembers({
     },
   });
 
+  const denyMutation = useMutation({
+    mutationFn: (userId: string) => removeMember(room!.id, userId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["pending", room?.id] });
+    },
+  });
+
   if (!pending || pending.length === 0) {
     return (
       <Card className={cn("w-full max-w-sm", className)}>
@@ -64,7 +72,12 @@ export function PendingMembers({
           </span>
         </CardTitle>
         <LoaderBar
-          isLoading={isLoading || isFetching || approveMutation.isPending}
+          isLoading={
+            isLoading ||
+            isFetching ||
+            approveMutation.isPending ||
+            denyMutation.isPending
+          }
         />
       </CardHeader>
       <CardContent className="flex flex-col gap-2 pt-0 max-h-24 overflow-auto">
@@ -77,11 +90,21 @@ export function PendingMembers({
               {p.display_name ?? "Unknown"}
             </span>
             <Button
+              size="icon-sm"
+              variant="ghost"
+              className="shrink-0 text-muted-foreground hover:text-destructive"
+              aria-label={`Deny ${p.display_name ?? "Unknown"}`}
+              onClick={() => denyMutation.mutate(p.user_id)}
+              disabled={approveMutation.isPending || denyMutation.isPending}
+            >
+              <UserX className="h-3.5 w-3.5" />
+            </Button>
+            <Button
               size="sm"
               variant="secondary"
               className="shrink-0 gap-1.5"
               onClick={() => approveMutation.mutate(p.user_id)}
-              disabled={approveMutation.isPending}
+              disabled={approveMutation.isPending || denyMutation.isPending}
             >
               <UserCheck className="h-3.5 w-3.5" />
               Let in

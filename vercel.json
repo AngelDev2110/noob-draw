@@ -1,3 +1,15 @@
 {
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+  "redirects": [
+    {
+      "source": "/",
+      "has": [{ "type": "host", "value": "noob-draw.vercel.app" }],
+      "destination": "https://www.angeldlt.dev/noob-draw",
+      "permanent": false
+    }
+  ],
+  "rewrites": [
+    { "source": "/noob-draw/:path*", "destination": "/:path*" },
+    { "source": "/noob-draw", "destination": "/" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
 }

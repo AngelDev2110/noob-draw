@@ -8,7 +8,11 @@ export const signInAnonymously = () =>
 
 export const getSession = () => supabase.auth.getSession();
 
-export const changeDisplayName = (displayName: string) =>
-  supabase.auth.updateUser({
+export const changeDisplayName = async (displayName: string) => {
+  const { data, error } = await supabase.auth.updateUser({
     data: { display_name: `${displayName}#${getRandomUserNumHash()}` },
   });
+
+  if (error) throw new Error(error.message);
+  return data;
+};

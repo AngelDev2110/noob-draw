@@ -18,6 +18,7 @@ import { ExitRoomButton } from "@/components/ExitRoomButton";
 import { useGameChannel } from "@/hooks/useGameChannel";
 import { useServerClock } from "@/hooks/useServerClock";
 import { useRoomMembershipRealtime } from "@/hooks/useRoomMembershipRealtime";
+import { useTurnAdvancer } from "@/hooks/useTurnAdvancer";
 import { getGameState, startGame, returnToLobby } from "@/services/game";
 import {
   TURN_DURATION,
@@ -27,15 +28,17 @@ import {
 
 function RoomContent({
   maxWidth,
+  roomId,
   children,
 }: {
   maxWidth: string;
+  roomId: string | undefined;
   children: React.ReactNode;
 }) {
   return (
     <div className={`flex w-full ${maxWidth} mx-auto flex-col gap-2`}>
       <div className="flex justify-end">
-        <ExitRoomButton />
+        <ExitRoomButton roomId={roomId} />
       </div>
       {children}
     </div>
@@ -55,6 +58,7 @@ export function RoomView() {
     queryKey: ["room", slug],
     queryFn: () => getRoomBySlug(slug),
     staleTime: 1000 * 60 * 5, // 5 minutes
+    retry: false, // a nonexistent slug is a real error, not a transient one
   });
 
   const { data: membership, isLoading: isMembershipLoading } = useQuery({
@@ -72,14 +76,26 @@ export function RoomView() {
     },
   });
 
-  const { broadcastGameStarted, broadcastReturnToLobby, onlineUserIds, channel } =
-    useGameChannel(room?.id);
+  const {
+    broadcastGameStarted,
+    broadcastReturnToLobby,
+    onlineUserIds,
+    visibleUserIds,
+    channel,
+  } = useGameChannel(room?.id);
 
   const { data: gameState } = useQuery({
     queryKey: ["gameState", room?.id],
     queryFn: () => getGameState(room!.id),
     enabled: !!room,
   });
+
+  const leaderCandidates =
+    visibleUserIds.size > 0 ? visibleUserIds : onlineUserIds;
+  const leaderId = [...leaderCandidates].sort()[0];
+  const isLeader = !!user?.id && leaderId === user.id;
+
+  useTurnAdvancer(room?.id, channel, gameState?.status, isLeader);
 
   const startGameMutation = useMutation({
     mutationFn: () => startGame(room!.id),
@@ -188,5 +204,9 @@ export function RoomView() {
     );
   }
 
-  return <RoomContent maxWidth={maxWidth}>{content}</RoomContent>;
+  return (
+    <RoomContent maxWidth={maxWidth} roomId={room?.id}>
+      {content}
+    </RoomContent>
+  );
 }
