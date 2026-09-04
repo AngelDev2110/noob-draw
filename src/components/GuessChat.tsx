@@ -76,6 +76,7 @@ export function GuessChat({
           size="icon"
           onClick={handleSend}
           disabled={disabled || isSubmitting || !input.trim()}
+          aria-label="Send guess"
         >
           <Send className="h-4 w-4" />
         </Button>

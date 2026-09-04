@@ -55,6 +55,7 @@ export function RoomView() {
     queryKey: ["room", slug],
     queryFn: () => getRoomBySlug(slug),
     staleTime: 1000 * 60 * 5, // 5 minutes
+    retry: false, // a nonexistent slug is a real error, not a transient one
   });
 
   const { data: membership, isLoading: isMembershipLoading } = useQuery({

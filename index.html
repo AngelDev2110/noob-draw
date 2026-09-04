@@ -5,6 +5,29 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Noob Draw</title>
+    <meta
+      name="description"
+      content="Play a real-time, multiplayer Pictionary-style drawing & guessing game with your friends — no sign-up needed."
+    />
+    <meta property="og:title" content="Noob Draw" />
+    <meta
+      property="og:description"
+      content="Draw, guess, and race your friends in this real-time multiplayer drawing game."
+    />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary" />
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem("theme");
+          var isDark =
+            stored === "dark" ||
+            (stored !== "light" &&
+              window.matchMedia("(prefers-color-scheme: dark)").matches);
+          if (isDark) document.documentElement.classList.add("dark");
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

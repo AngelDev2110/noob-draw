@@ -32,6 +32,7 @@ export function RoomSlug({ slug }: { slug: string }) {
                 variant="ghost"
                 className="shrink-0 h-8 w-8 text-muted-foreground hover:text-primary"
                 onClick={handleCopy}
+                aria-label="Copy room code"
               >
                 {copied ? (
                   <Check className="h-4 w-4 text-primary" />
