@@ -18,6 +18,7 @@ import { ExitRoomButton } from "@/components/ExitRoomButton";
 import { useGameChannel } from "@/hooks/useGameChannel";
 import { useServerClock } from "@/hooks/useServerClock";
 import { useRoomMembershipRealtime } from "@/hooks/useRoomMembershipRealtime";
+import { useTurnAdvancer } from "@/hooks/useTurnAdvancer";
 import { getGameState, startGame, returnToLobby } from "@/services/game";
 import {
   TURN_DURATION,
@@ -75,14 +76,26 @@ export function RoomView() {
     },
   });
 
-  const { broadcastGameStarted, broadcastReturnToLobby, onlineUserIds, channel } =
-    useGameChannel(room?.id);
+  const {
+    broadcastGameStarted,
+    broadcastReturnToLobby,
+    onlineUserIds,
+    visibleUserIds,
+    channel,
+  } = useGameChannel(room?.id);
 
   const { data: gameState } = useQuery({
     queryKey: ["gameState", room?.id],
     queryFn: () => getGameState(room!.id),
     enabled: !!room,
   });
+
+  const leaderCandidates =
+    visibleUserIds.size > 0 ? visibleUserIds : onlineUserIds;
+  const leaderId = [...leaderCandidates].sort()[0];
+  const isLeader = !!user?.id && leaderId === user.id;
+
+  useTurnAdvancer(room?.id, channel, gameState?.status, isLeader);
 
   const startGameMutation = useMutation({
     mutationFn: () => startGame(room!.id),
