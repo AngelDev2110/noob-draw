@@ -3,6 +3,8 @@ import type { RealtimeChannel } from "@supabase/supabase-js";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { submitGuess, getMyGuessStatus } from "@/services/game";
 import { useBroadcast } from "@/hooks/useBroadcast";
+import { useSoundSettings } from "@/context/SoundSettingsContext";
+import { playSound } from "@/lib/sounds";
 
 type Announcement = {
   id: string;
@@ -23,6 +25,7 @@ export function useCorrectGuess(
   },
 ) {
   const queryClient = useQueryClient();
+  const { soundEnabled } = useSoundSettings() || {};
   const [announcement, setAnnouncement] = useState<Announcement | null>(null);
   const [localRevealedWord, setLocalRevealedWord] = useState<string | null>(
     null,
@@ -60,6 +63,7 @@ export function useCorrectGuess(
         points: payload.points,
         drawerPoints: payload.drawerPoints,
       });
+      if (soundEnabled) playSound("success");
       queryClient.invalidateQueries({
         queryKey: ["scoreboard", identityRef.current.roomId],
       });

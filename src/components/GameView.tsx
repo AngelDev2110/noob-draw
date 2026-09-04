@@ -13,6 +13,8 @@ import { useWordReveal } from "@/hooks/useWordReveal";
 import { useGuessChat } from "@/hooks/useGuessChat";
 import { useCountdown } from "@/hooks/useCountDown";
 import { useCorrectGuess } from "@/hooks/useCorrectGuess";
+import { useTimerSound } from "@/hooks/useTimerSound";
+import { usePencilSound } from "@/hooks/usePencilSound";
 import { TURN_DURATION, ROUND_END_DURATION } from "@/constants/game";
 
 type Room = Awaited<ReturnType<typeof getRoomBySlug>>;
@@ -58,6 +60,8 @@ export function GameView({
     currentDrawer: gameState.current_drawer,
   });
 
+  usePencilSound(channel, isPlaying);
+
   useEffect(() => {
     if (channel && isPlaying) requestSnapshot();
   }, [channel, isPlaying, requestSnapshot]);
@@ -79,6 +83,8 @@ export function GameView({
     TURN_DURATION,
     serverOffset,
   );
+
+  useTimerSound(secondsLeft, isPlaying, gameState.turn_started_at);
 
   const roundEndSecondsLeft = useCountdown(
     gameState.round_end_started_at,
