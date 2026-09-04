@@ -86,6 +86,32 @@ export const approveMember = async (roomId: string, userId: string) => {
   if (error) throw new Error(error.message);
 };
 
+export const leaveRoom = async (roomId: string) => {
+  const {
+    data: { session },
+  } = await getSession();
+  const userId = session?.user.id;
+  if (!userId) throw new Error("User is not authenticated");
+
+  const { error } = await supabase
+    .from("room_members")
+    .delete()
+    .eq("room_id", roomId)
+    .eq("user_id", userId);
+
+  if (error) throw new Error(error.message);
+};
+
+export const removeMember = async (roomId: string, userId: string) => {
+  const { error } = await supabase
+    .from("room_members")
+    .delete()
+    .eq("room_id", roomId)
+    .eq("user_id", userId);
+
+  if (error) throw new Error(error.message);
+};
+
 export const getPendingMembers = async (roomId: string) => {
   const { data, error } = await supabase.rpc("get_pending_members", {
     p_room_id: roomId,

@@ -60,6 +60,7 @@ export function RoomLobbyContent({
         className="mt-4"
         room={room}
         onlineUserIds={onlineUserIds}
+        isHost={isHost}
       />
       {isHost && (
         <div>

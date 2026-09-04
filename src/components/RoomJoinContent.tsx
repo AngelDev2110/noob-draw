@@ -1,10 +1,14 @@
 import type { User } from "@supabase/supabase-js";
-import type { UseMutationResult } from "@tanstack/react-query";
-import { getMyMembership, requestToJoin } from "@/services/rooms";
+import {
+  type UseMutationResult,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
+import { getMyMembership, requestToJoin, leaveRoom } from "@/services/rooms";
 import { CardContent, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { UsernameField } from "@/components/UsernameField";
-import { SendHorizonal, LoaderCircle, Timer } from "lucide-react";
+import { SendHorizonal, LoaderCircle, Timer, X } from "lucide-react";
 
 export function RoomJoinContent({
   user,
@@ -19,6 +23,17 @@ export function RoomJoinContent({
     void
   >;
 }) {
+  const queryClient = useQueryClient();
+
+  const cancelMutation = useMutation({
+    mutationFn: () => leaveRoom(membership!.room_id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["membership", membership!.room_id],
+      });
+    },
+  });
+
   return (
     <CardContent>
       <CardTitle className="text-base">
@@ -75,10 +90,22 @@ export function RoomJoinContent({
       </Button>
 
       {membership && !membership.approved && (
-        <p className="text-xs text-muted-foreground mt-1 text-center">
-          <span className="font-bold">Note:</span> Tell your friend to approve
-          your request!
-        </p>
+        <>
+          <p className="text-xs text-muted-foreground mt-1 text-center">
+            <span className="font-bold">Note:</span> Tell your friend to
+            approve your request!
+          </p>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="mt-2 w-full text-muted-foreground hover:text-destructive"
+            onClick={() => cancelMutation.mutate()}
+            disabled={cancelMutation.isPending}
+          >
+            <X className="h-3.5 w-3.5" />
+            Cancel request
+          </Button>
+        </>
       )}
     </CardContent>
   );

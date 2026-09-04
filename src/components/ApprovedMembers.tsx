@@ -1,8 +1,24 @@
 import { useAuth } from "@/context/AuthContext";
-import { getApprovedMembers, getRoomBySlug } from "@/services/rooms";
-import { useQuery } from "@tanstack/react-query";
+import {
+  getApprovedMembers,
+  removeMember,
+  getRoomBySlug,
+} from "@/services/rooms";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
+import { Users, UserMinus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LoaderBar } from "./ui/LoaderBar";
 
@@ -10,12 +26,15 @@ export function ApprovedMembers({
   room,
   className,
   onlineUserIds,
+  isHost = false,
 }: {
   room: Awaited<ReturnType<typeof getRoomBySlug>>;
   className?: string;
   onlineUserIds: Set<string>;
+  isHost?: boolean;
 }) {
   const { user } = useAuth() || {};
+  const queryClient = useQueryClient();
 
   const {
     data: members,
@@ -25,6 +44,13 @@ export function ApprovedMembers({
     queryKey: ["members", room?.id],
     queryFn: () => getApprovedMembers(room!.id),
     enabled: !!room && !!user,
+  });
+
+  const removeMutation = useMutation({
+    mutationFn: (userId: string) => removeMember(room!.id, userId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["members", room?.id] });
+    },
   });
 
   if (!members || members.length === 0) {
@@ -83,10 +109,45 @@ export function ApprovedMembers({
               <span className="flex-1 text-sm font-medium truncate">
                 {m.display_name ?? "Unknown"}
               </span>
-              {m.user_id === room?.created_by && (
+              {m.user_id === room?.created_by ? (
                 <span className="text-xs font-semibold text-primary/60 bg-primary/10 px-2 py-0.5 rounded-full">
                   Host
                 </span>
+              ) : (
+                isHost && (
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        size="icon-sm"
+                        variant="ghost"
+                        className="shrink-0 text-muted-foreground hover:text-destructive"
+                        aria-label={`Remove ${m.display_name ?? "Unknown"}`}
+                        disabled={removeMutation.isPending}
+                      >
+                        <UserMinus className="h-3.5 w-3.5" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>
+                          Remove {m.display_name ?? "this player"}?
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                          They&apos;ll be kicked out of the room and lose
+                          their progress in the current game.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => removeMutation.mutate(m.user_id)}
+                        >
+                          Remove
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                )
               )}
             </div>
           );

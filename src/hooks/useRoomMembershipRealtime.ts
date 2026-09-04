@@ -19,13 +19,14 @@ export function useRoomMembershipRealtime(
       .on(
         "postgres_changes",
         {
-          event: "INSERT",
+          event: "*",
           schema: "public",
           table: "room_members",
           filter: `room_id=eq.${room.id}`,
         },
         () => {
           queryClient.invalidateQueries({ queryKey: ["pending", room.id] });
+          queryClient.invalidateQueries({ queryKey: ["members", room.id] });
         },
       )
       .subscribe();
@@ -42,7 +43,7 @@ export function useRoomMembershipRealtime(
       .on(
         "postgres_changes",
         {
-          event: "UPDATE",
+          event: "*",
           schema: "public",
           table: "room_members",
           filter: `user_id=eq.${user.id}`,

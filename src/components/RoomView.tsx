@@ -27,15 +27,17 @@ import {
 
 function RoomContent({
   maxWidth,
+  roomId,
   children,
 }: {
   maxWidth: string;
+  roomId: string | undefined;
   children: React.ReactNode;
 }) {
   return (
     <div className={`flex w-full ${maxWidth} mx-auto flex-col gap-2`}>
       <div className="flex justify-end">
-        <ExitRoomButton />
+        <ExitRoomButton roomId={roomId} />
       </div>
       {children}
     </div>
@@ -189,5 +191,9 @@ export function RoomView() {
     );
   }
 
-  return <RoomContent maxWidth={maxWidth}>{content}</RoomContent>;
+  return (
+    <RoomContent maxWidth={maxWidth} roomId={room?.id}>
+      {content}
+    </RoomContent>
+  );
 }
