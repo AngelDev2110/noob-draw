@@ -1,7 +1,7 @@
 const soundUrls = {
-  interface: "/sounds/interface.wav",
-  success: "/sounds/success.wav",
-  timer: "/sounds/timer.wav",
+  interface: `${import.meta.env.BASE_URL}sounds/interface.wav`,
+  success: `${import.meta.env.BASE_URL}sounds/success.wav`,
+  timer: `${import.meta.env.BASE_URL}sounds/timer.wav`,
 } as const;
 
 export type SoundName = keyof typeof soundUrls;

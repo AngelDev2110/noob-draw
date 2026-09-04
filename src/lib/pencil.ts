@@ -1,4 +1,4 @@
-const PENCIL_URL = "/sounds/pencil.mp3";
+const PENCIL_URL = `${import.meta.env.BASE_URL}sounds/pencil.mp3`;
 
 let pencilAudio: HTMLAudioElement | null = null;
 

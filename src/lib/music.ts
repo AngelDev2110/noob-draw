@@ -1,4 +1,4 @@
-const MUSIC_URL = "/sounds/background.mp3";
+const MUSIC_URL = `${import.meta.env.BASE_URL}sounds/background.mp3`;
 
 let musicAudio: HTMLAudioElement | null = null;
 
