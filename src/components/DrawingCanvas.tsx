@@ -278,7 +278,7 @@ export function DrawingCanvas({
                 className={`h-7 w-7 rounded-full transition-all ${
                   color === value && tool === "pen"
                     ? "ring-2 ring-foreground ring-offset-2 ring-offset-card scale-105"
-                    : "ring-1 ring-inset ring-border hover:scale-110"
+                    : "dark:border dark:border-border hover:scale-110"
                 }`}
                 style={{ backgroundColor: value }}
               />
