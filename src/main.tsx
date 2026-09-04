@@ -6,6 +6,7 @@ import "@/styles/main.css";
 
 const router = createRouter({
   routeTree,
+  basepath: "/noob-draw",
   defaultPreload: "intent",
   scrollRestoration: true,
 });
